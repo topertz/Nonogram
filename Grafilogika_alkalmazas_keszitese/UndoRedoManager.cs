@@ -1,0 +1,170 @@
+﻿using System;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.Runtime.Remoting.Lifetime;
+using System.Windows.Forms;
+
+namespace Grafilogika_alkalmazas_keszitese
+{
+    public class UndoRedoManager
+    {
+        private Nonogram form;
+
+        public UndoRedoManager(Nonogram f)
+        {
+            form = f;
+        }
+
+        public void SaveState(bool wasX = false)
+        {
+            if (form.gridButtons == null) return;
+
+            Color[,] clone = CloneGrid();
+            form.undoStack.Push(Tuple.Create(clone, form.wrongCellClicks, form.wrongColorClicks, wasX));
+            form.redoStack.Clear();
+        }
+
+        public void Undo()
+        {
+            bool isEasy = form.cmbDifficulty.SelectedIndex == 0;
+            if (form.undoStack.Count == 0 || (!isEasy && form.undoClicks >= form.maxUndoClicks))
+            {
+                MessageBox.Show("Nincs korábbi állapot!", "Undo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            // Aktuális állapot mentése redo stackbe
+            Color[,] currentClone = CloneGrid();
+            bool wasXCurrent = false;
+            if (form.undoStack.Count > 0)
+                wasXCurrent = form.undoStack.Peek().Item4;
+            form.redoStack.Push(Tuple.Create(currentClone, form.wrongCellClicks, form.wrongColorClicks, wasXCurrent));
+
+            // Előző állapot visszaállítása
+            var state = form.undoStack.Pop();
+            RestoreState(state.Item1);  // rács
+            form.wrongCellClicks = state.Item2;
+            form.wrongColorClicks = state.Item3;
+            bool wasX = state.Item4;
+
+            // Label-ek frissítése
+            form.lblWrongCellClicks.Text = $"Helytelen kattintások száma: {form.wrongCellClicks} (max: {form.maxWrongCellClicks})";
+            form.lblWrongColorClicks.Text = $"Helytelen színek száma: {form.wrongColorClicks} (max: {form.maxWrongColorClicks})";
+
+            form.lastActionWasX = wasX;
+            if (!isEasy && !wasX)
+            {
+                if (form.undoClicks < form.maxUndoClicks)
+                    form.undoClicks++;
+                else
+                    MessageBox.Show("Elérted a maximális visszavonást!");
+            }
+            UpdateUndoRedoLabels();
+        }
+
+        public void Redo()
+        {
+            bool isEasy = form.cmbDifficulty.SelectedIndex == 0;
+            if (form.redoStack.Count == 0 || (!isEasy && form.redoClicks >= form.maxRedoClicks))
+            {
+                MessageBox.Show("Nincs későbbi állapot!", "Redo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            // Aktuális állapot mentése undo stackbe
+            Color[,] currentClone = CloneGrid();
+            bool wasXCurrent = false;
+            if (form.redoStack.Count > 0)
+                wasXCurrent = form.redoStack.Peek().Item4;
+            form.undoStack.Push(Tuple.Create(currentClone, form.wrongCellClicks, form.wrongColorClicks, wasXCurrent));
+
+            // Következő állapot visszaállítása
+            var state = form.redoStack.Pop();
+            RestoreState(state.Item1);  // rács
+            form.wrongCellClicks = state.Item2;
+            form.wrongColorClicks = state.Item3;
+            bool wasX = state.Item4;
+
+            // Label-ek frissítése
+            form.lblWrongCellClicks.Text = $"Helytelen kattintások száma: {form.wrongCellClicks} (max: {form.maxWrongCellClicks})";
+            form.lblWrongColorClicks.Text = $"Helytelen színek száma: {form.wrongColorClicks} (max: {form.maxWrongColorClicks})";
+
+            form.lastActionWasX = wasX;
+
+            if (!isEasy && !wasX)
+            {
+                if (form.redoClicks < form.maxRedoClicks)
+                    form.redoClicks++;
+                else
+                    MessageBox.Show("Elérted a maximális visszavonást!");
+            }
+            UpdateUndoRedoLabels();
+        }
+
+        public void UpdateUndoRedoLabels()
+        {
+            form.lblUndoCount.Text = $"Visszavonások száma: {form.undoClicks} (max: {form.maxUndoClicks})";
+            form.lblRedoCount.Text = $"Előrelépések száma: {form.redoClicks} (max: {form.maxRedoClicks})";
+        }
+
+        private Color[,] CloneGrid()
+        {
+            Color[,] clone = new Color[form.row, form.col];
+            Color xColorMarker = Color.FromArgb(255, 255, 254); // Speciális jelölő szín
+
+            for (int i = 0; i < form.row; i++)
+            {
+                for (int j = 0; j < form.col; j++)
+                {
+                    // Ha van X, akkor a jelölő színt mentjük, egyébként a rendes színt
+                    clone[i, j] = form.userXMark[i, j] ? xColorMarker : form.userColorRGB[i, j];
+                }
+            }
+            return clone;
+        }
+
+        private void RestoreState(Color[,] state)
+        {
+            Color xColorMarker = Color.FromArgb(255, 255, 254);
+
+            for (int i = 0; i < form.row; i++)
+            {
+                for (int j = 0; j < form.col; j++)
+                {
+                    if (form.isHintFixed[i, j])
+                        continue;
+                    Color storedColor = state[i, j];
+
+                    if (storedColor.ToArgb() == xColorMarker.ToArgb())
+                    {
+                        // Ez egy X jelölés volt
+                        form.userXMark[i, j] = true;
+                        form.userColorRGB[i, j] = Color.White;
+                        form.gridButtons[i, j].BackColor = Color.White;
+
+                        // Megjelenítjük az X-et vizuálisan
+                        float fontSize = form.userCellSize * 0.3f;
+                        form.gridButtons[i, j].Font = new Font("Arial", fontSize, FontStyle.Bold);
+                        form.gridButtons[i, j].ForeColor = Color.Gray;
+                        form.gridButtons[i, j].Text = "X";
+                    }
+                    else
+                    {
+                        // Ez egy sima szín volt
+                        form.userXMark[i, j] = false;
+                        form.userColorRGB[i, j] = storedColor;
+                        form.gridButtons[i, j].BackColor = storedColor;
+                        form.gridButtons[i, j].Text = "";
+                    }
+                }
+            }
+            form.render.UpdatePreview();
+        }
+
+        public void ClearHistory()
+        {
+            form.undoStack.Clear();
+            form.redoStack.Clear();
+        }
+    }
+}
