@@ -1,0 +1,36 @@
+﻿[
+  {
+    "Username": "Mark",
+    "Difficulty": "Könnyű",
+    "Mode": "Fekete-fehér",
+    "HintCount": 5,
+    "WrongCellClicks": 0,
+    "ElapsedSeconds": 13
+  },
+  {
+    "Username": "Mark",
+    "Difficulty": "Könnyű",
+    "Mode": "Színes",
+    "HintCount": 6,
+    "WrongCellClicks": 2,
+    "WrongColorClicks": 0,
+    "ElapsedSeconds": 33
+  },
+  {
+    "Username": "Adam",
+    "Difficulty": "Könnyű",
+    "Mode": "Fekete-fehér",
+    "HintCount": 3,
+    "WrongCellClicks": 1,
+    "ElapsedSeconds": 13
+  },
+  {
+    "Username": "Adam",
+    "Difficulty": "Könnyű",
+    "Mode": "Színes",
+    "HintCount": 3,
+    "WrongCellClicks": 0,
+    "WrongColorClicks": 0,
+    "ElapsedSeconds": 69
+  }
+]
