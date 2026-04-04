@@ -613,7 +613,7 @@ namespace Grafilogika_alkalmazas_keszitese
                         break;
                     case "Nehéz":
                         text = "Nehéz szint – Színes mód\nHelytelen kattintások száma: 20" +
-                            "Helytelen színek száma: 20\nSegítségek száma: 25" +
+                            "\nHelytelen színek száma: 20\nSegítségek száma: 25" +
                             "\nVisszavonások száma: 20\nKitöltendő mezők száma: 95" +
                             "\nJátékidő: 21 perc";
                         break;
