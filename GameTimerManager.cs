@@ -1,0 +1,617 @@
+﻿using System;
+using System.Drawing;
+using System.Text;
+using System.Windows.Forms;
+using Timer = System.Windows.Forms.Timer;
+
+namespace Grafilogika_alkalmazas_keszitese
+{
+    public class GameTimerManager
+    {
+        public Timer gameTimer;
+        public bool gameStarted = false;
+        public int elapsedSeconds = 0;
+        public int remainingSeconds = 0;
+        private Nonogram form;
+        private NonogramGrid grid;
+        private NonogramRender render;
+        private UndoRedoManager undoredoManager;
+        private ExtraGridManager extragridManager;
+
+        public GameTimerManager(Nonogram f, NonogramGrid g, NonogramRender r, UndoRedoManager u, ExtraGridManager e)
+        {
+            this.form = f;
+            this.grid = g;
+            this.render = r;
+            this.undoredoManager = u;
+
+            // A Timer a Form1-ből jön
+            gameTimer = new Timer();
+            gameTimer.Interval = 1000;
+            gameTimer.Tick += Timer_Tick;
+            this.extragridManager = e;
+        }
+
+        private void Timer_Tick(object sender, EventArgs e)
+        {
+            if (remainingSeconds <= 0)
+            {
+                gameTimer.Stop();
+                MessageBox.Show(
+                    "Lejárt az idő! A játék újraindul.",
+                    "Idő lejárt",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning
+                );
+                RestartGameWithCurrentDifficulty();
+                return;
+            }
+            remainingSeconds--;
+            elapsedSeconds++;
+            UpdateLabel();
+        }
+
+        public void CmbDifficultyOrMode_Changed(object sender, EventArgs e)
+        {
+            UpdateDifficultyAndModeToolTip();
+            if (!gameStarted && !form.rbNumberEntryMode.Checked)
+            {
+                return;
+            }
+            grid.isColor = form.cmbMode.SelectedItem?.ToString() == "Színes";
+            grid.selectedColor = grid.isColor ? Color.White : Color.Black;
+            DifficultyOrModeChanged();
+            undoredoManager.ClearHistory();
+        }
+
+        public void BtnRestart_Click(object sender, EventArgs e)
+        {
+            RestartGameWithCurrentDifficulty();
+        }
+
+        public void BtnBackToHome_Click(object sender, EventArgs e)
+        {
+            grid.ClearGrid();
+            extragridManager.ClearAllClueInputs();
+            ResetCellClicks();
+            ResetColorClicks();
+            ResetHintClicks();
+            gameTimer.Stop();
+            form.lblTimer.Text = "0:00";
+            form.picPreview.Visible = false;
+            form.picSolutionPreview.Visible = false;
+            form.lblTimer.Visible = false;
+            form.chkShowX.Visible = false;
+            form.cmbDifficulty.Visible = true;
+            form.cmbMode.Visible = true;
+            form.btnSolve.Visible = false;
+            form.btnHint.Visible = false;
+            form.btnCheck.Visible = false;
+            form.btnUndo.Visible = false;
+            form.btnRedo.Visible = false;
+            form.lblUsername.Visible = true;
+            form.txtUsername.Visible = true;
+            form.lblWrongCellClicks.Visible = false;
+            form.lblWrongColorClicks.Visible = false;
+            form.lblHintCount.Visible = false;
+            form.lblUndoCount.Visible = false;
+            form.btnLeaderboard.Visible = true;
+            form.btnGenerateRandom.Visible = true;
+            form.btnTips.Visible = true;
+            form.lblExtra.Visible = true;
+            form.btnRestart.Visible = false;
+            form.btnBackToHome.Visible = false;
+            form.btnExtraGenerate.Visible = false;
+            form.btnSmartAI.Visible = false;
+            form.rbNumberEntryMode.Visible = true;
+            form.rbImgBlackWhiteMode.Visible = true;
+            form.rbImgColorMode.Visible = true;
+            form.btnShowExtraSolution.Visible = false;
+            form.btnPickColor.Visible = false;
+            form.btnResetExtraGrid.Visible = false;
+            form.btnSaveClues.Visible = false;
+            form.btnLoadClues.Visible = false;
+            form.btnSelectImage.Visible = false;
+            form.rbNumberEntryMode.Checked = false;
+            form.rbImgBlackWhiteMode.Checked = false;
+            form.rbImgColorMode.Checked = false;
+            form.groupModes.Visible = true;
+            form.groupModes.Location = new Point(20, 200);
+            form.lblUsername.Location = new Point(20, 100);
+            form.txtUsername.Location = new Point(145, 95);
+            form.Size = new Size(380, 350);
+            form.txtUsername.Enabled = true;
+            form.txtUsername.Text = "";
+            form.colorPalette.Visible = false;
+            form.ActiveControl = null;
+            gameStarted = false;
+            elapsedSeconds = 0;
+            undoredoManager.undoClicks = 0;
+            form.cmbDifficulty.SelectedIndex = 0;
+            form.cmbMode.SelectedIndex = 0;
+            form.lblWrongCellClicks.Text = $"Helytelen kattintások száma: {grid.wrongCellClicks}";
+            form.lblWrongColorClicks.Text = $"Helytelen színek száma: {grid.wrongColorClicks}";
+            form.lblHintCount.Text = $"Segítségek száma: {render.hintCount}";
+            form.lblUndoCount.Text = $"Visszavonások száma: {undoredoManager.undoClicks}";
+            return;
+        }
+
+        public void BtnTips_Click(object sender, EventArgs e)
+        {
+            StringBuilder tips = new StringBuilder();
+
+            tips.AppendLine("NONOGRAM TIPPEK (klasszikus játékmódok, NEM extra módok)");
+            tips.AppendLine("────────────────────────\n");
+
+            // általános tippek
+            tips.AppendLine("ÁLTALÁNOS TIPPEK\n");
+            tips.AppendLine("Amennyiben egy sor vagy oszlop számainak az összege + a kötelező üres cellák száma = a sor vagy az oszlop hosszával, akkor az egész sort vagy oszlopot ki kell tölteni.\n");
+
+            tips.AppendLine("Amennyiben egy szám nagyobb, mint a sor vagy az oszlop fele, akkor a középső cellák biztosan kitöltöttek.\n");
+
+            tips.AppendLine("A megadott számok sorrendjét nem lehet felcserélni.\n");
+
+            tips.AppendLine("Minden kitöltött blokkot a megfelelő számhoz kell igazítani.\n");
+
+            tips.AppendLine("Mindig ellenőrizd a sorok és az oszlopok számait a hibák elkerülésére.\n");
+
+            // X
+            tips.AppendLine("X (kizárás)\n");
+
+            tips.AppendLine("Az X jelek célja megjelölni azokat a cellákat, amelyek biztosan NEM tartoznak a megoldáshoz.");
+            tips.AppendLine("Segítenek a logikai következtetésekben és a hibák elkerülésében.\n");
+
+            // Drag
+            tips.AppendLine("MOUSEDRAG (egérhúzás)\n");
+            tips.AppendLine("Bal egérgomb húzása: több cella kitöltése egyszerre.");
+            tips.AppendLine("Jobb egérgomb húzása: több X jel lerakása egyszerre.\n");
+
+            tips.AppendLine("Az egérhúzás gyorsítja a játékot, különösen nagyobb méretű pályáknál.\n");
+
+            // fekete fehér mód
+            tips.AppendLine("FEKETE–FEHÉR JÁTÉKMÓD\n");
+            tips.AppendLine("Bal kattintás: fekete cella lerakása vagy eltávolítása.");
+            tips.AppendLine("Jobb kattintás: X jel lerakása vagy eltávolítása.\n");
+
+            tips.AppendLine("Fekete-fehér nonogram szabályok:\n");
+            tips.AppendLine("A számok sorrendje kötelező.");
+            tips.AppendLine("A blokkok között legalább egy üres cella kell, hogy legyen.");
+            tips.AppendLine("Az X jelek segítik a kizárást és a logikai következtetéseket.\n");
+
+            // színes mód
+            tips.AppendLine("SZÍNES JÁTÉKMÓD\n");
+            tips.AppendLine("Bal kattintás: a kiválasztott szín lerakása vagy eltávolítása.");
+            tips.AppendLine("Jobb kattintás: X jel lerakása vagy eltávolítása.\n");
+
+            tips.AppendLine("Színes nonogram szabályok:\n");
+            tips.AppendLine("A számok sorrendje és színe mindig kötelező.");
+            tips.AppendLine("Különböző színű blokkok között nem kötelező üres cella (de lehet).");
+            tips.AppendLine("Azonos színű blokkok között legalább egy üres cella kell, hogy legyen, különben egyszínű blokknak számítana.");
+            tips.AppendLine("Az X jelek színes módban is használhatók a kizáráshoz, de vigyázat itt nem mindig egyértelmű a kizárás.");
+
+            MessageBox.Show(
+                tips.ToString(),
+                "Megoldási tippek",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information
+            );
+        }
+
+        public void Start()
+        {
+            SetTimeByDifficulty();
+            gameTimer.Start();
+        }
+
+        public void Stop()
+        {
+            gameTimer.Stop();
+        }
+
+        private void UpdateLabel()
+        {
+            int minutes = remainingSeconds / 60;
+            int seconds = remainingSeconds % 60;
+            form.lblTimer.Text = $"{minutes:D2}:{seconds:D2}";
+        }
+
+        private void SetTimeByDifficulty()
+        {
+            if (grid.isColor) // Színes mód
+            {
+                switch (form.cmbDifficulty.SelectedIndex)
+                {
+                    case 0: remainingSeconds = 4 * 60; break;
+                    case 1: remainingSeconds = 11 * 60; break;
+                    case 2: remainingSeconds = 21 * 60; break;
+                    default: remainingSeconds = 4 * 60; break;
+                }
+            }
+            else // Fekete fehér mód
+            {
+                switch (form.cmbDifficulty.SelectedIndex)
+                {
+                    case 0: remainingSeconds = 3 * 60; break;
+                    case 1: remainingSeconds = 10 * 60; break;
+                    case 2: remainingSeconds = 20 * 60; break;
+                    default: remainingSeconds = 3 * 60; break;
+                }
+            }
+
+            UpdateLabel();
+        }
+
+        public void DifficultyOrModeChanged()
+        {
+            form.chkShowX.Checked = false;
+            form.btnCheck.Enabled = true;
+            form.chkShowX.Enabled = true;
+
+            if (grid == null)
+            {
+                return;
+            }
+
+            ResetCellClicks();
+            ResetColorClicks();
+            ResetHintClicks();
+
+            grid.ClearGrid();
+            form.gameTimerManager.Stop();
+
+            grid.isColor = form.cmbMode.SelectedItem?.ToString() == "Színes";
+            form.lblWrongCellClicks.Visible = true;
+            form.lblWrongColorClicks.Visible = grid.isColor;
+            form.lblHintCount.Visible = true;
+            form.lblUndoCount.Visible = true;
+
+            int width = 5, height = 5, targetPixels = 13, maxAttempts = 1000;
+
+            switch (form.cmbDifficulty.SelectedIndex)
+            {
+                case 0:
+                    width = height = 5;
+                    targetPixels = grid.isColor ? 11 : 13;
+                    maxAttempts = 1000;
+                    form.chkShowX.Visible = false;
+                    form.btnSelectImage.Visible = false;
+                    form.btnSmartAI.Visible = true;
+                    break;
+
+                case 1:
+                    width = height = 10;
+                    targetPixels = grid.isColor ? 40 : 45;
+                    maxAttempts = 1500;
+                    form.chkShowX.Visible = false;
+                    form.btnSelectImage.Visible = false;
+                    break;
+
+                case 2:
+                    width = height = 15;
+                    targetPixels = grid.isColor ? 95 : 100;
+                    maxAttempts = 2500;
+                    form.chkShowX.Visible = false;
+                    form.btnSelectImage.Visible = false;
+                    break;
+
+                default:
+                    form.cmbDifficulty.SelectedIndex = 0;
+                    break;
+            }
+
+            form.btnSolve.Enabled = true;
+            form.btnHint.Enabled = true;
+            form.btnCheck.Enabled = true;
+            form.btnRedo.Enabled = true;
+            form.btnUndo.Enabled = true;
+            form.chkShowX.Enabled = true;
+            bool showUndoRedo = form.cmbDifficulty.SelectedIndex != 0;
+            form.lblUndoCount.Visible = showUndoRedo;
+
+            // Generálás
+            grid.GenerateNonogram(20, 150, width, height, targetPixels, maxAttempts);
+
+            form.lblTimer.Visible = true;
+            form.picPreview.Visible = true;
+            form.picSolutionPreview.Visible = false;
+
+            // Timer újraindítása
+            Start();
+
+            if (form.picSolutionPreview != null)
+            {
+                form.picSolutionPreview.Image = render.GeneratePreviewImage();
+                form.picSolutionPreview.SizeMode = PictureBoxSizeMode.Zoom;
+            }
+
+            SetMaxWrongClicksByDifficulty();
+            SetMaxHintsByDifficulty();
+            undoredoManager.UpdateUndoLabel();
+            render.UpdatePreview();
+        }
+
+        public void ResetCellClicks()
+        {
+            grid.wrongCellClicks = 0;
+            form.lblWrongCellClicks.Text = $"Helytelen kattintások száma: 0 (max: {grid.maxWrongCellClicks})";
+        }
+
+        public void ResetColorClicks()
+        {
+            grid.wrongColorClicks = 0;
+            form.lblWrongColorClicks.Text = $"Helytelen színek száma: 0 (max: {grid.maxWrongColorClicks})";
+        }
+
+        public void ResetHintClicks()
+        {
+            render.hintCount = 0;
+            form.lblHintCount.Text = $"Segítségek száma: 0 (max: {render.maxHintCount})";
+        }
+
+        public void StartTimer()
+        {
+            form.gameTimerManager.Start();
+        }
+
+        public void RestartGameWithCurrentDifficulty()
+        {
+            grid.ClearGrid();
+            undoredoManager.ClearHistory();
+            ResetCellClicks();
+            ResetColorClicks();
+            ResetHintClicks();
+            grid.wrongCellClicks = 0;
+            grid.wrongColorClicks = 0;
+            render.hintCount = 0;
+
+            form.lblWrongCellClicks.Text = $"Helytelen kattintások száma: {grid.wrongCellClicks} " +
+                $"(max: {grid.maxWrongCellClicks})";
+            form.lblWrongColorClicks.Text = $"Helytelen színek száma: {grid.wrongColorClicks} " +
+                $"(max: {grid.maxWrongColorClicks})";
+            form.lblHintCount.Text = $"Segítségek száma: {render.hintCount} " +
+                $"(max: {render.maxHintCount})";
+            form.picPreview.Visible = true;
+            form.picPreview.Image = null;
+
+            if (form.txtUsername != null)
+            {
+                form.txtUsername.Enabled = false;
+            }
+
+            form.btnSmartAI.Enabled = true;
+            form.btnCheck.Enabled = true;
+            form.chkShowX.Enabled = true;
+            form.btnSolve.Enabled = true;
+            form.btnHint.Enabled = true;
+            form.btnCheck.Enabled = true;
+            form.btnUndo.Enabled = true;
+            form.btnRedo.Enabled = true;
+            form.btnBackToHome.Enabled = true;
+            grid.aiButtonClicked = false;
+            elapsedSeconds = 0;
+            undoredoManager.undoClicks = 0;
+            undoredoManager.UpdateUndoLabel();
+
+            int width = 5, height = 5, targetPixels = 13, maxAttempts = 1000;
+
+            switch (form.cmbDifficulty.SelectedIndex)
+            {
+                case 0:
+                    width = height = 5;
+                    targetPixels = grid.isColor ? 11 : 13;
+                    maxAttempts = 1000;
+                    break;
+
+                case 1:
+                    width = height = 10;
+                    targetPixels = grid.isColor ? 40 : 45;
+                    maxAttempts = 1500;
+                    break;
+
+                case 2:
+                    width = height = 15;
+                    targetPixels = grid.isColor ? 95 : 100;
+                    maxAttempts = 2500;
+                    break;
+            }
+
+            grid.GenerateNonogram(20, 150, width, height, targetPixels, maxAttempts);
+
+            if (form.picSolutionPreview != null)
+            {
+                form.picSolutionPreview.Image = render.GeneratePreviewImage();
+                form.picSolutionPreview.SizeMode = PictureBoxSizeMode.Zoom;
+            }
+
+            Start();
+            render.UpdatePreview();
+            undoredoManager.SaveState();
+        }
+
+        public string GetDifficultyName()
+        {
+            switch (form.cmbDifficulty.SelectedIndex)
+            {
+                case 0: return "Könnyű";
+                case 1: return "Közepes";
+                case 2: return "Nehéz";
+                default: return "Ismeretlen";
+            }
+        }
+
+        public string GetModeName()
+        {
+            return grid.isColor ? "Színes" : "Fekete-fehér";
+        }
+
+        public void SetMaxWrongClicksByDifficulty()
+        {
+            if (grid.isColor) // Színes mód
+            {
+                switch (form.cmbDifficulty.SelectedIndex)
+                {
+                    case 0:
+                        grid.maxWrongCellClicks = 5;
+                        grid.maxWrongColorClicks = 5;
+                        break;
+                    case 1:
+                        grid.maxWrongCellClicks = 15;
+                        grid.maxWrongColorClicks = 15;
+                        undoredoManager.maxUndoClicks = 8;
+                        break;
+                    case 2:
+                        grid.maxWrongCellClicks = 20;
+                        grid.maxWrongColorClicks = 20;
+                        undoredoManager.maxUndoClicks = 20;
+                        break;
+                    default:
+                        grid.maxWrongCellClicks = 5;
+                        grid.maxWrongColorClicks = 5;
+                        break;
+                }
+            }
+            else // Fekete fehér mód
+            {
+                switch (form.cmbDifficulty.SelectedIndex)
+                {
+                    case 0:
+                        grid.maxWrongCellClicks = 5;
+                        grid.maxWrongColorClicks = 5;
+                        break;
+                    case 1:
+                        grid.maxWrongCellClicks = 10;
+                        grid.maxWrongColorClicks = 10;
+                        undoredoManager.maxUndoClicks = 5;
+                        break;
+                    case 2:
+                        grid.maxWrongCellClicks = 15;
+                        grid.maxWrongColorClicks = 15;
+                        undoredoManager.maxUndoClicks = 17;
+                        break;
+
+                    default:
+                        grid.maxWrongCellClicks = 5;
+                        grid.maxWrongColorClicks = 5;
+                        break;
+                }
+            }
+
+            // Frissítjük a label szöveget
+            form.lblWrongCellClicks.Text = $"Helytelen kattintások száma: {grid.wrongCellClicks} " +
+                $"(max: {grid.maxWrongCellClicks})";
+            form.lblWrongColorClicks.Text = $"Helytelen színek száma: {grid.wrongColorClicks} " +
+                $"(max: {grid.maxWrongColorClicks})";
+        }
+
+        public void SetMaxHintsByDifficulty()
+        {
+            if (grid.isColor) // Színes mód
+            {
+                switch (form.cmbDifficulty.SelectedIndex)
+                {
+                    case 0:
+                        render.maxHintCount = 5;
+                        break;
+                    case 1:
+                        render.maxHintCount = 15;
+                        break;
+                    case 2:
+                        render.maxHintCount = 25;
+                        break;
+                    default:
+                        render.maxHintCount = 5;
+                        break;
+                }
+            }
+            else // Fekete fehér mód
+            {
+                switch (form.cmbDifficulty.SelectedIndex)
+                {
+                    case 0:
+                        render.maxHintCount = 5;
+                        break;
+                    case 1:
+                        render.maxHintCount = 10;
+                        break;
+                    case 2:
+                        render.maxHintCount = 20;
+                        break;
+                    default:
+                        render.maxHintCount = 5;
+                        break;
+                }
+            }
+
+            form.lblHintCount.Text = $"Segítségek száma: {render.hintCount} (max: {render.maxHintCount})";
+        }
+
+        public void UpdateDifficultyAndModeToolTip()
+        {
+            string difficulty = form.cmbDifficulty.SelectedItem?.ToString()?.Trim();
+            string mode = form.cmbMode.SelectedItem?.ToString()?.Trim();
+
+            if (difficulty == null || mode == null)
+            {
+                return;
+            }
+
+            // Emoji eltávolítása (csak az első szó marad)
+            int spaceIndex = difficulty.IndexOf(' ');
+            if (spaceIndex > 0)
+            {
+                difficulty = difficulty.Substring(0, spaceIndex);
+            }
+
+            string text = "";
+
+            if (mode == "Fekete-fehér")
+            {
+                switch (difficulty)
+                {
+                    case "Könnyű":
+                        text = "Könnyű szint – Fekete-fehér mód\nHelytelen kattintások száma: 5\nSegítségek száma: 5" +
+                            "\nKorlátlan számú visszavonás\nKitöltendő mezők száma: 13" +
+                            "\nJátékidő: 3 perc";
+                        break;
+                    case "Közepes":
+                        text = "Közepes szint – Fekete-fehér mód\nHelytelen kattintások száma: 10\nSegítségek száma: 10" +
+                            "\nVisszavonások száma: 5\nKitöltendő mezők száma: 45" +
+                            "\nJátékidő: 10 perc";
+                        break;
+                    case "Nehéz":
+                        text = "Nehéz szint – Fekete-fehér mód\nHelytelen kattintások száma: 15\nSegítségek száma: 20" +
+                            "\nVisszavonások száma: 17\nKitöltendő mezők száma: 100" +
+                            "\nJátékidő: 20 perc";
+                        break;
+                }
+            }
+            else if (mode == "Színes")
+            {
+                switch (difficulty)
+                {
+                    case "Könnyű":
+                        text = "Könnyű szint – Színes mód\nHelytelen kattintások száma: 5\n" +
+                            "Helytelen színek száma: 5\nSegítségek száma: 5" +
+                            "\nKorlátlan számú visszavonás\nKitöltendő mezők száma: 11" +
+                            "\nJátékidő: 4 perc";
+                        break;
+                    case "Közepes":
+                        text = "Közepes szint – Színes mód\nHelytelen kattintások száma: 15" +
+                            "\nHelytelen színek száma: 15\nSegítségek száma: 15" +
+                            "\nVisszavonások száma: 8\nKitöltendő mezők száma: 40" +
+                            "\nJátékidő: 11 perc";
+                        break;
+                    case "Nehéz":
+                        text = "Nehéz szint – Színes mód\nHelytelen kattintások száma: 20" +
+                            "\nHelytelen színek száma: 20\nSegítségek száma: 25" +
+                            "\nVisszavonások száma: 20\nKitöltendő mezők száma: 95" +
+                            "\nJátékidő: 21 perc";
+                        break;
+                }
+            }
+
+            form.toolTip.SetToolTip(form.cmbDifficulty, text);
+            form.toolTip.SetToolTip(form.cmbMode, text);
+        }
+    }
+}
