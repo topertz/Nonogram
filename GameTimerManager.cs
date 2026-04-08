@@ -185,7 +185,7 @@ namespace Grafilogika_alkalmazas_keszitese
 
             tips.AppendLine("Színes nonogram szabályok:\n");
             tips.AppendLine("A számok sorrendje és színe mindig kötelező.");
-            tips.AppendLine("Különböző színű blokkok között nem kötelező üres cella (de lehet).");
+            tips.AppendLine("Különböző színű blokkok között nem kötelező az üres cella (de lehet).");
             tips.AppendLine("Azonos színű blokkok között legalább egy üres cella kell, hogy legyen, különben egyszínű blokknak számítana.");
             tips.AppendLine("Az X jelek színes játékmódban is használhatók a kizáráshoz, de vigyázat itt nem mindig egyértelmű a kizárás.");
 
