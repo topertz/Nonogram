@@ -8,23 +8,23 @@ The aim of the thesis is to create an application that generates graphilogic (no
 
 We have two types of nonograms: Black and white and multicolor
 
-Black and white game mode nonograms
+<h3>Black and white game mode nonograms</h3>
 
 ![Nonogram application](image/fekete_feher_nonogram.jpg)
 
-Multicolor game mode nonograms
+<h3>Multicolor game mode nonograms</h3>
 
 ![Nonogram application](image/szines_nonogram.jpg)
 
-Black and white entry mode nonograms
+<h3>Black and white entry mode nonograms</h3>
 
 ![Nonogram application](image/fekete_feher_szambeiro_nonogram.jpg)
 
-Multicolor entry mode nonograms
+<h3>Multicolor entry mode nonograms</h3>
 
 ![Nonogram application](image/szines_szambeiro_nonogram.jpg)
 
-Black and white image scanning mode nonograms
+<h3>Black and white image scanning mode nonograms</h3>
 
 ![Nonogram application](image/fekete_feher_kepbeolvaso_nonogram.jpg)
 
