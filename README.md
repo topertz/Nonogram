@@ -1,3 +1,5 @@
+<h1>Goal of my diploma thesis</h1>
+
 <p align="justify">The aim of the thesis is to create an application that generates graphilogic (nonogram, Japanese crossword) type puzzles and supports their solution. The application is able to create tasks, provide their visual display, and provide the opportunity for interactive solution, error detection, and checking the correct solution.</p>
 
 <h3>Main page of my application</h3>
