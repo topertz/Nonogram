@@ -2,7 +2,7 @@ The aim of the thesis is to create an application that generates graphilogic (no
 
 Main page of my application
 
-![Nonogram application](image/fooldal.jpg)
+<center>![Nonogram application](image/fooldal.jpg)</center>
 
 We have two types of nonograms: Black and white and multicolor
 
