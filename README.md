@@ -2,4 +2,8 @@ The aim of the thesis is to create an application that generates graphilogic (no
 
 Black and white gamemode nonograms
 
-![Nonogram application](image/nonogram.jpg)
+![Nonogram application](image/fekete_feher_nonogram.jpg)
+
+Multicolor gamemode nonograms
+
+![Nonogram application](image/szines_nonogram.jpg)
