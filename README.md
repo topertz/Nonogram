@@ -28,6 +28,6 @@ We have two types of nonograms: Black and white and multicolor
 
 ![Nonogram application](image/fekete_feher_kepbeolvaso_nonogram.jpg)
 
-Multicolor image scanning mode nonograms
+<h3>Multicolor image scanning mode nonograms</h3>
 
 ![Nonogram application](image/szines_kepbeolvaso_nonogram.jpg)
