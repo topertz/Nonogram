@@ -576,7 +576,7 @@ namespace Grafilogika_alkalmazas_keszitese
                     case "Medium":
                         text = "Medium level – Black and white mode\nNumber of incorrect clicks: 10\nNumber of hints: 10" +
                             "\nNumber of withdrawals: 5\nNumber of fields to fill in: 45" +
-                            "\Game time: 10 minutes";
+                            "\nGame time: 10 minutes";
                         break;
                     case "Hard":
                         text = "Hard level – Black and white mode\nNumber of incorrect clicks: 15\nNumber of hints: 20" +
@@ -593,13 +593,13 @@ namespace Grafilogika_alkalmazas_keszitese
                         text = "Easy level – Colored mode\nNumber of incorrect clicks: 5\n" +
                             "Number of colors: 5\nNumber of hints: 5" +
                             "\nUnlimited number of withdrawals\nNumber of fields to fill in: 11" +
-                            "\Game time: 4 minutes";
+                            "\nGame time: 4 minutes";
                         break;
                     case "Medium":
                         text = "Medium level – Colored mode\nNumber of incorrect clicks: 15" +
                             "\nNumber of colors: 15\nNumber of hints: 15" +
                             "\nNumber of withdrawals: 8\nNumber of fields to fill in: 40" +
-                            "\Game time: 11 minutes";
+                            "\nGame time: 11 minutes";
                         break;
                     case "Hard":
                         text = "Hard level – Colored mode\nNumber of incorrect clicks: 20" +
