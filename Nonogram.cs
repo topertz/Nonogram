@@ -216,7 +216,7 @@ namespace Grafilogika_alkalmazas_keszitese
             this.Controls.Add(rbNumberEntryMode);
 
             rbImgBlackWhiteMode = new RadioButton();
-            rbImgBlackWhiteMode.Text = "Black and white image scanning mode";
+            rbImgBlackWhiteMode.Text = "BW image scanning mode";
             rbImgBlackWhiteMode.Location = new Point(10, 40); // about the Color mode
             rbImgBlackWhiteMode.AutoSize = true;
             rbImgBlackWhiteMode.CheckedChanged += extraGridManager.RbImgBlackWhiteMode_CheckedChanged;
@@ -421,7 +421,7 @@ namespace Grafilogika_alkalmazas_keszitese
             btnResetExtraGrid.FlatStyle = FlatStyle.Flat;
             btnResetExtraGrid.BackColor = Color.Red;
             btnResetExtraGrid.Font = new Font("Arial", 10, FontStyle.Bold);
-            btnResetExtraGrid.Text = "T�rl�s";
+            btnResetExtraGrid.Text = "Delete content";
             btnResetExtraGrid.FlatAppearance.BorderSize = 0;
             btnResetExtraGrid.Click += extraGridManager.BtnClearGrid_Click;
             this.Controls.Add(btnResetExtraGrid);
