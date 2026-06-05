@@ -22,16 +22,16 @@ We have two types of nonograms: Black and white and multicolor
 
 <h3>Black and white entry mode nonograms</h3>
 
-![Nonogram application](image/fekete_feher_szambeiro_nonogram.jpg)
+![Nonogram application](image/nonogram_black_and_white_numerical_mode.jpg)
 
 <h3>Multicolor entry mode nonograms</h3>
 
-![Nonogram application](image/szines_szambeiro_nonogram.jpg)
+![Nonogram application](image/nonogram_colored_numerical_mode.jpg)
 
 <h3>Black and white image scanning mode nonograms</h3>
 
-![Nonogram application](image/fekete_feher_kepbeolvaso_nonogram.jpg)
+![Nonogram application](image/nonogram_black_and_white_image_scanning_mode.jpg)
 
 <h3>Multicolor image scanning mode nonograms</h3>
 
-![Nonogram application](image/szines_kepbeolvaso_nonogram.jpg)
+![Nonogram application](image/nonogram_colored_image_scanning_mode.jpg)
