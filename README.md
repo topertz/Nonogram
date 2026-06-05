@@ -14,11 +14,11 @@ We have two types of nonograms: Black and white and multicolor
 
 <h3>Black and white game mode nonograms</h3>
 
-![Nonogram application](image/fekete_feher_nonogram.jpg)
+![Nonogram application](image/nonogram_black_and_white_game_mode.jpg)
 
 <h3>Multicolor game mode nonograms</h3>
 
-![Nonogram application](image/szines_nonogram.jpg)
+![Nonogram application](image/nonogram_colored_game_mode.jpg)
 
 <h3>Black and white entry mode nonograms</h3>
 
