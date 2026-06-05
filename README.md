@@ -7,7 +7,7 @@ We have 4 modes: Game modes, entry modes and image scanning modes
 <h3>Main page of my application</h3>
 
 <p align="center">
-  <img src="image/fooldal.jpg" alt="Nonogram application">
+  <img src="image/nonogram_main.jpg" alt="Nonogram application">
 </p>
 
 We have two types of nonograms: Black and white and multicolor
